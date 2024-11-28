@@ -287,15 +287,36 @@ func produceToElasticsearch(ctx context.Context, bi esutil.BulkIndexer, eventBuf
 func parseFlags() Config {
 	config := Config{}
 
-	flag.StringVar(&config.JetstreamURL, "jetstream", "jetstream2.us-east.bsky.network", "Jetstream WebSocket URL")
-	flag.StringVar(&config.ElasticsearchURL, "es", "http://localhost:9200", "Elasticsearch URL")
-	flag.StringVar(&config.IndexPrefix, "index", "bluesky-events", "Elasticsearch index prefix")
-	flag.IntVar(&config.BatchSize, "batch", 1000, "Batch size for Elasticsearch bulk indexing")
-	flag.DurationVar(&config.FlushInterval, "flush", 30*time.Second, "Flush interval for Elasticsearch bulk indexing")
-	flag.IntVar(&config.BufferSize, "buffer", 10000, "Size of the event buffer")
-	flag.StringVar(&config.ElasticsUsername, "es-user", "", "Elasticsearch username")
-	flag.StringVar(&config.ElasticsPassword, "es-pass", "", "Elasticsearch password")
-	flag.StringVar(&config.KibanaURL, "kibana", "", "Kibana URL (optional, will derive from ES URL if not provided)")
+	// Add help text for each flag
+	flag.StringVar(&config.JetstreamURL, "jetstream", "jetstream2.us-east.bsky.network", 
+		"Bluesky Jetstream WebSocket URL to connect to")
+	flag.StringVar(&config.ElasticsearchURL, "es", "http://localhost:9200", 
+		"Elasticsearch URL including protocol and port")
+	flag.StringVar(&config.IndexPrefix, "index", "bluesky-events", 
+		"Prefix for Elasticsearch indices. Actual indices will be <prefix>-YYYY.MM.DD")
+	flag.IntVar(&config.BatchSize, "batch", 1000, 
+		"Number of events to batch together before sending to Elasticsearch")
+	flag.DurationVar(&config.FlushInterval, "flush", 30*time.Second, 
+		"Maximum time to wait before flushing events to Elasticsearch (e.g. 30s, 1m)")
+	flag.IntVar(&config.BufferSize, "buffer", 10000, 
+		"Size of the internal event buffer between WebSocket and Elasticsearch")
+	flag.StringVar(&config.ElasticsUsername, "es-user", "elastic", 
+		"Username for Elasticsearch authentication")
+	flag.StringVar(&config.ElasticsPassword, "es-pass", "changeme", 
+		"Password for Elasticsearch authentication")
+	flag.StringVar(&config.KibanaURL, "kibana", "", 
+		"Kibana URL (optional, will be derived from ES URL if not provided)")
+
+	// Add custom usage message
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, "skeetslurper - A tool to stream Bluesky events to Elasticsearch\n\n")
+		fmt.Fprintf(os.Stderr, "Usage:\n")
+		fmt.Fprintf(os.Stderr, "  %s [flags]\n\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "Flags:\n")
+		flag.PrintDefaults()
+		fmt.Fprintf(os.Stderr, "\nExample:\n")
+		fmt.Fprintf(os.Stderr, "  %s -es http://localhost:9200 -es-user elastic -es-pass secret123\n", os.Args[0])
+	}
 
 	flag.Parse()
 
