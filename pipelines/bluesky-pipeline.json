@@ -1,0 +1,21 @@
+{
+  "description": "Pipeline for processing Bluesky Jetstream events",
+  "version": 5,
+  "processors": [
+    {
+      "script": {
+        "lang": "painless",
+        "source": "ctx['@timestamp'] = Instant.ofEpochMilli(ctx.time_us / 1000)",
+        "description": "Convert microseconds timestamp to @timestamp"
+      }
+    },
+    {
+      "json": {
+        "field": "commit",
+        "target_field": "commit",
+        "if": "ctx.commit != null",
+        "ignore_failure": true
+      }
+    }
+  ]
+}

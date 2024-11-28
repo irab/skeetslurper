@@ -1,0 +1,47 @@
+{
+  "index_patterns": ["bluesky-events-*"],
+  "template": {
+    "settings": {
+      "number_of_shards": 1,
+      "number_of_replicas": 1
+    },
+    "mappings": {
+      "dynamic": true,
+      "properties": {
+        "@timestamp": {
+          "type": "date"
+        },
+        "did": {
+          "type": "keyword"
+        },
+        "time_us": {
+          "type": "long"
+        },
+        "kind": {
+          "type": "keyword"
+        },
+        "commit": {
+          "type": "object",
+          "properties": {
+            "record": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "type": "text",
+                  "fields": {
+                    "keyword": {
+                      "type": "keyword",
+                      "ignore_above": 256
+                    }
+                  }
+                }
+              },
+              "dynamic": true
+            }
+          },
+          "dynamic": true
+        }
+      }
+    }
+  }
+}
