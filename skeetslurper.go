@@ -15,6 +15,7 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+	"net"
 
 	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/elastic/go-elasticsearch/v8/esutil"
@@ -288,8 +289,8 @@ func parseFlags() Config {
 	config := Config{}
 
 	// Add help text for each flag
-	flag.StringVar(&config.JetstreamURL, "jetstream", "jetstream2.us-east.bsky.network", 
-		"Bluesky Jetstream WebSocket URL to connect to")
+	flag.StringVar(&config.JetstreamURL, "jetstream", findBestJetstreamServer(), 
+		"Bluesky Jetstream WebSocket URL to connect to (default: auto-selected based on latency)")
 	flag.StringVar(&config.ElasticsearchURL, "es", "http://localhost:9200", 
 		"Elasticsearch URL including protocol and port")
 	flag.StringVar(&config.IndexPrefix, "index", "bluesky-events", 
@@ -536,4 +537,55 @@ func ensureIndexTemplate(ctx context.Context, es *elasticsearch.Client, indexPre
 	}
 
 	return nil
+}
+
+func findBestJetstreamServer() string {
+	servers := []string{
+		"jetstream1.us-east.bsky.network",
+		"jetstream2.us-east.bsky.network",
+		"jetstream1.us-west.bsky.network",
+		"jetstream2.us-west.bsky.network",
+	}
+
+	type serverLatency struct {
+		server  string
+		latency time.Duration
+	}
+
+	results := make(chan serverLatency, len(servers))
+
+	// Test each server concurrently
+	for _, server := range servers {
+		go func(srv string) {
+			start := time.Now()
+			conn, err := net.DialTimeout("tcp", srv+":443", 5*time.Second)
+			if err != nil {
+				results <- serverLatency{srv, time.Hour} // Use very high latency for failed connections
+				return
+			}
+			defer conn.Close()
+			results <- serverLatency{srv, time.Since(start)}
+		}(server)
+	}
+
+	// Collect results
+	var bestServer string
+	bestLatency := time.Hour
+
+	for i := 0; i < len(servers); i++ {
+		result := <-results
+		log.Printf("Server %s latency: %v", result.server, result.latency)
+		if result.latency < bestLatency {
+			bestLatency = result.latency
+			bestServer = result.server
+		}
+	}
+
+	if bestServer == "" {
+		log.Printf("Warning: Could not connect to any servers, using default")
+		return servers[0] // Fallback to first server
+	}
+
+	log.Printf("Selected server %s with latency %v", bestServer, bestLatency)
+	return bestServer
 }
