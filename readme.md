@@ -60,6 +60,10 @@ Login with the following credentials:
 
 **Password:** changeme
 
+Bluesky events will take around 30s to appear in Kibana and should be indexed under the `bluesky-events-*` data view.
+
+Link straight to the data view --> [here](http://localhost:5601/app/discover#/?_g=(filters:!(),refreshInterval:(pause:!t,value:60000),time:(from:now-15m,to:now))&_a=(columns:!(),dataSource:(dataViewId:bluesky-events,type:dataView),filters:!(),interval:auto,query:(language:kuery,query:''),sort:!(!('@timestamp',desc))))
+
 
 Do not expose this outside of your local network, you will instantly get hacked.
 
@@ -67,6 +71,7 @@ Do not expose this outside of your local network, you will instantly get hacked.
 
 - [ ] Figure out proper index mapping and how to handle Lexicon/schema changes
 - [ ] Some nice prebuilt Bluesky Kibana dashboards
+- [ ] Figure out the disk space footprint
 
 ## What's going on?
 
