@@ -1,6 +1,6 @@
 # Elastic Skeetslurper
 
-skeeSuper basic tooling to slurp sweet skeet juice from Bluesky's Jetstream cluster, index them in Elasticsearch and visualise in Kibana.
+Basic tooling to slurp Skeet juice from Bluesky's Jetstream cluster, index them in Elasticsearch and visualise in Kibana.
 
 Should take about 5 minutes to get up and running, no environment variables to set.
 
